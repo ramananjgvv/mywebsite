@@ -44,10 +44,79 @@
             gap: 24px;
         }
 
+        .toolbar-settings {
+            position: relative;
+        }
+
+        .toolbar-settings summary {
+            cursor: pointer;
+            list-style: none;
+        }
+
+        .toolbar-settings summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .settings-menu {
+            position: absolute;
+            z-index: 1;
+            top: calc(100% + 12px);
+            right: 0;
+            min-width: 190px;
+            padding: 16px;
+            border: 1px solid rgb(255 255 255 / 25%);
+            border-radius: 12px;
+            background: #211c4b;
+            box-shadow: 0 12px 30px rgb(0 0 0 / 25%);
+            text-align: left;
+        }
+
+        .settings-menu label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .settings-menu select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #c4b5fd;
+            border-radius: 6px;
+            color: #211c4b;
+            font: inherit;
+        }
+
         .toolbar-links a:hover,
         .toolbar-links a:focus-visible {
             text-decoration: underline;
             text-underline-offset: 5px;
+        }
+
+        .toolbar-settings summary:hover,
+        .toolbar-settings summary:focus-visible {
+            text-decoration: underline;
+            text-underline-offset: 5px;
+        }
+
+        body[data-wallpaper="sunset"] {
+            background:
+                radial-gradient(ellipse at 75% 15%, #fde68a 0, transparent 35%),
+                linear-gradient(145deg, #7f1d4e, #ea580c 55%, #fbbf24);
+        }
+
+        body[data-wallpaper="ocean"] {
+            background:
+                radial-gradient(ellipse at 20% 20%, #67e8f9 0, transparent 40%),
+                radial-gradient(ellipse at 85% 75%, #60a5fa 0, transparent 45%),
+                linear-gradient(135deg, #082f49, #0369a1 55%, #164e63);
+        }
+
+        body[data-wallpaper="forest"] {
+            background:
+                radial-gradient(ellipse at 75% 20%, #bef264 0, transparent 38%),
+                radial-gradient(ellipse at 15% 85%, #34d399 0, transparent 45%),
+                linear-gradient(135deg, #14532d, #166534 55%, #064e3b);
         }
 
         main {
@@ -85,6 +154,18 @@
             <a href="#home">Home</a>
             <a href="#about">About</a>
         </nav>
+        <details class="toolbar-settings">
+            <summary>Settings</summary>
+            <div class="settings-menu">
+                <label for="wallpaper">Wallpaper</label>
+                <select id="wallpaper">
+                    <option value="aurora">Aurora</option>
+                    <option value="sunset">Sunset</option>
+                    <option value="ocean">Ocean</option>
+                    <option value="forest">Forest</option>
+                </select>
+            </div>
+        </details>
     </header>
     <main id="home">
         <section aria-labelledby="page-title">
@@ -93,5 +174,12 @@
             <p>today is a holiday</p>
         </section>
     </main>
+    <script>
+        const wallpaperSelector = document.querySelector("#wallpaper");
+
+        wallpaperSelector.addEventListener("change", (event) => {
+            document.body.dataset.wallpaper = event.target.value;
+        });
+    </script>
 </body>
 </html>
