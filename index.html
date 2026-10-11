@@ -39,6 +39,33 @@
             font-weight: 700;
         }
 
+        .toolbar-search {
+            display: flex;
+            flex: 1;
+            gap: 8px;
+            max-width: 520px;
+            margin: 0 auto;
+        }
+
+        .toolbar-search input {
+            flex: 1;
+            min-width: 0;
+            padding: 8px;
+            border: 1px solid #c4b5fd;
+            border-radius: 6px;
+            color: #211c4b;
+            font: inherit;
+        }
+
+        .toolbar-search button {
+            padding: 8px 12px;
+            border: 1px solid #c4b5fd;
+            border-radius: 6px;
+            color: #211c4b;
+            font: inherit;
+            cursor: pointer;
+        }
+
         .toolbar-links {
             display: flex;
             gap: 24px;
@@ -142,6 +169,12 @@
                 padding: 14px 18px;
             }
 
+            .toolbar-search {
+                order: 3;
+                flex-basis: 100%;
+                max-width: none;
+            }
+
             .toolbar-links {
                 gap: 16px;
             }
@@ -151,6 +184,10 @@
 <body>
     <header class="toolbar">
         <a class="toolbar-brand" href="#home">My world</a>
+        <form class="toolbar-search" action="https://www.google.com/search" method="get" role="search">
+            <input type="search" name="q" aria-label="Search Google" placeholder="Search the web" required>
+            <button type="submit">Search</button>
+        </form>
         <details class="toolbar-settings">
             <summary>Settings</summary>
             <div class="settings-menu">
