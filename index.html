@@ -78,7 +78,8 @@
             font-weight: 600;
         }
 
-        .settings-menu select {
+        .settings-menu select,
+        .settings-menu input {
             width: 100%;
             padding: 8px;
             border: 1px solid #c4b5fd;
@@ -157,6 +158,8 @@
         <details class="toolbar-settings">
             <summary>Settings</summary>
             <div class="settings-menu">
+                <label for="page-title-setting">Page title</label>
+                <input id="page-title-setting" type="text" value="My Awesome Web Page">
                 <label for="wallpaper">Wallpaper</label>
                 <select id="wallpaper">
                     <option value="aurora">Aurora</option>
@@ -175,7 +178,12 @@
         </section>
     </main>
     <script>
+        const pageTitleInput = document.querySelector("#page-title-setting");
         const wallpaperSelector = document.querySelector("#wallpaper");
+
+        pageTitleInput.addEventListener("input", () => {
+            document.title = pageTitleInput.value;
+        });
 
         wallpaperSelector.addEventListener("change", (event) => {
             document.body.dataset.wallpaper = event.target.value;
