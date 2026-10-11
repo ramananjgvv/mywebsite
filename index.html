@@ -169,16 +169,18 @@
     <main id="home">
         <section aria-labelledby="page-title">
             <h1 id="page-title">Hello, World! 🚀</h1>
-            <p id="about">Welcome to my very first website built by me, my name is ramanan!</p>
+            <p id="about">Welcome to my very first website built by me, my name is raj!</p>
             <p>today is a holiday</p>
         </section>
     </main>
     <script>
         const pageTitleInput = document.querySelector("#page-title-setting");
+        const pageHeading = document.querySelector("#page-title");
         const wallpaperSelector = document.querySelector("#wallpaper");
 
         pageTitleInput.addEventListener("input", () => {
             document.title = pageTitleInput.value;
+            pageHeading.textContent = pageTitleInput.value;
         });
 
         wallpaperSelector.addEventListener("change", (event) => {
