@@ -199,6 +199,53 @@
             min-height: 1.6em;
         }
 
+        .painting-section {
+            margin: 40px auto 0;
+        }
+
+        .painting-tools {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .painting-tools label {
+            font-weight: 600;
+        }
+
+        .painting-tools input,
+        .painting-tools button {
+            min-height: 40px;
+            padding: 6px 10px;
+            border: 1px solid #c4b5fd;
+            border-radius: 6px;
+            color: #211c4b;
+            font: inherit;
+        }
+
+        .painting-tools input {
+            width: 48px;
+            padding: 4px;
+        }
+
+        .painting-tools button {
+            cursor: pointer;
+        }
+
+        #painting-canvas {
+            display: block;
+            width: min(100%, 640px);
+            height: auto;
+            aspect-ratio: 2;
+            border: 1px solid rgb(255 255 255 / 70%);
+            border-radius: 8px;
+            background: #fff;
+            cursor: crosshair;
+            touch-action: none;
+        }
+
         @media (max-width: 480px) {
             .toolbar {
                 padding: 14px 18px;
@@ -254,6 +301,17 @@
                 <button type="submit">Sign up</button>
             </form>
             <p id="signup-status" role="status" aria-live="polite"></p>
+            <section class="painting-section" aria-labelledby="painting-title">
+                <h2 id="painting-title">Painting</h2>
+                <div class="painting-tools">
+                    <label for="paint-color">Brush color</label>
+                    <input id="paint-color" type="color" value="#211c4b">
+                    <button id="clear-painting" type="button">Clear</button>
+                </div>
+                <canvas id="painting-canvas" width="800" height="400" aria-label="Painting canvas. Draw by dragging with a mouse, touch, or pen.">
+                    Your browser does not support the painting canvas.
+                </canvas>
+            </section>
         </section>
     </main>
     <script>
@@ -262,6 +320,19 @@
         const wallpaperSelector = document.querySelector("#wallpaper");
         const signupForm = document.querySelector("#signup-form");
         const signupStatus = document.querySelector("#signup-status");
+        const paintingCanvas = document.querySelector("#painting-canvas");
+        const paintingContext = paintingCanvas.getContext("2d");
+        const paintColor = document.querySelector("#paint-color");
+        const clearPaintingButton = document.querySelector("#clear-painting");
+        let isPainting = false;
+
+        const getCanvasPoint = (event) => {
+            const bounds = paintingCanvas.getBoundingClientRect();
+            return {
+                x: (event.clientX - bounds.left) * paintingCanvas.width / bounds.width,
+                y: (event.clientY - bounds.top) * paintingCanvas.height / bounds.height
+            };
+        };
 
         pageTitleInput.addEventListener("input", () => {
             document.title = pageTitleInput.value;
@@ -276,6 +347,39 @@
             event.preventDefault();
             signupStatus.textContent = "Thanks! This demo does not save or send your details.";
             signupForm.reset();
+        });
+
+        paintingCanvas.addEventListener("pointerdown", (event) => {
+            event.preventDefault();
+            paintingCanvas.setPointerCapture(event.pointerId);
+            const point = getCanvasPoint(event);
+            paintingContext.beginPath();
+            paintingContext.moveTo(point.x, point.y);
+            paintingContext.strokeStyle = paintColor.value;
+            paintingContext.lineWidth = 5 * paintingCanvas.width / paintingCanvas.getBoundingClientRect().width;
+            paintingContext.lineCap = "round";
+            paintingContext.lineJoin = "round";
+            isPainting = true;
+        });
+
+        paintingCanvas.addEventListener("pointermove", (event) => {
+            if (!isPainting) {
+                return;
+            }
+
+            const point = getCanvasPoint(event);
+            paintingContext.lineTo(point.x, point.y);
+            paintingContext.stroke();
+        });
+
+        const stopPainting = () => {
+            isPainting = false;
+        };
+
+        paintingCanvas.addEventListener("pointerup", stopPainting);
+        paintingCanvas.addEventListener("pointercancel", stopPainting);
+        clearPaintingButton.addEventListener("click", () => {
+            paintingContext.clearRect(0, 0, paintingCanvas.width, paintingCanvas.height);
         });
     </script>
 </body>
