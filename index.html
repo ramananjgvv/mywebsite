@@ -3,6 +3,33 @@
 <head>
     <!-- The title shows up at the very top tab of your web browser -->
     <title>My Awesome Web Page</title>
+    <style>
+        body {
+            min-height: 100vh;
+            margin: 0;
+            display: grid;
+            place-content: center;
+            padding: 24px;
+            box-sizing: border-box;
+            color: #fff;
+            font-family: system-ui, sans-serif;
+            text-align: center;
+            background:
+                radial-gradient(ellipse at 20% 20%, #f9a8d4 0, transparent 40%),
+                radial-gradient(ellipse at 80% 80%, #67e8f9 0, transparent 45%),
+                linear-gradient(135deg, #312e81, #7c3aed 55%, #2563eb);
+        }
+
+        h1 {
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            margin-bottom: 0.5rem;
+        }
+
+        p {
+            font-size: 1.15rem;
+            line-height: 1.6;
+        }
+    </style>
 </head>
 <body>
     <!-- This is the big main heading on your web page -->
