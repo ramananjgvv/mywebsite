@@ -19,9 +19,9 @@
         }
 
         .toolbar {
-            display: flex;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 520px) minmax(0, 1fr);
             align-items: center;
-            justify-content: space-between;
             gap: 24px;
             padding: 16px 32px;
             background: rgb(22 18 55 / 35%);
@@ -35,16 +35,20 @@
         }
 
         .toolbar-brand {
+            justify-self: start;
             font-size: 1.1rem;
             font-weight: 700;
         }
 
         .toolbar-search {
             display: flex;
-            flex: 1;
             gap: 8px;
-            max-width: 520px;
-            margin: 0 auto;
+            width: 100%;
+            margin: 0;
+        }
+
+        .toolbar-settings {
+            justify-self: end;
         }
 
         .toolbar-search input {
@@ -246,8 +250,10 @@
             touch-action: none;
         }
 
-        @media (max-width: 480px) {
+        @media (max-width: 800px) {
             .toolbar {
+                display: flex;
+                flex-wrap: wrap;
                 padding: 14px 18px;
             }
 
