@@ -168,41 +168,6 @@
             line-height: 1.6;
         }
 
-        .signup-form {
-            display: grid;
-            gap: 12px;
-            max-width: 360px;
-            margin: 32px auto 0;
-            text-align: left;
-        }
-
-        .signup-form label {
-            font-weight: 600;
-        }
-
-        .signup-form input,
-        .signup-form button {
-            box-sizing: border-box;
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #c4b5fd;
-            border-radius: 6px;
-            font: inherit;
-        }
-
-        .signup-form input {
-            color: #211c4b;
-        }
-
-        .signup-form button {
-            color: #211c4b;
-            cursor: pointer;
-        }
-
-        #signup-status {
-            min-height: 1.6em;
-        }
-
         .painting-section {
             margin: 40px auto 0;
         }
@@ -296,17 +261,6 @@
             <h1 id="page-title">Hello, World! 🚀</h1>
             <p id="about">Welcome to my very first website built by me, my name is raj!</p>
             <p>today is a holiday</p>
-            <h2>Sign up</h2>
-            <form class="signup-form" id="signup-form">
-                <label for="signup-email">Email</label>
-                <input id="signup-email" name="email" type="email" autocomplete="email" required>
-                <label for="signup-username">Username</label>
-                <input id="signup-username" name="username" type="text" autocomplete="username" required>
-                <label for="signup-password">Password</label>
-                <input id="signup-password" name="password" type="password" autocomplete="new-password" required>
-                <button type="submit">Sign up</button>
-            </form>
-            <p id="signup-status" role="status" aria-live="polite"></p>
             <section class="painting-section" aria-labelledby="painting-title">
                 <h2 id="painting-title">Painting</h2>
                 <div class="painting-tools">
@@ -324,8 +278,6 @@
         const pageTitleInput = document.querySelector("#page-title-setting");
         const pageHeading = document.querySelector("#page-title");
         const wallpaperSelector = document.querySelector("#wallpaper");
-        const signupForm = document.querySelector("#signup-form");
-        const signupStatus = document.querySelector("#signup-status");
         const paintingCanvas = document.querySelector("#painting-canvas");
         const paintingContext = paintingCanvas.getContext("2d");
         const paintColor = document.querySelector("#paint-color");
@@ -347,16 +299,6 @@
 
         wallpaperSelector.addEventListener("change", (event) => {
             document.body.dataset.wallpaper = event.target.value;
-        });
-
-        signupForm.addEventListener("submit", (event) => {
-            event.preventDefault();
-
-            const formData = new FormData(signupForm);
-            const signupDetails = Object.fromEntries(formData.entries());
-            signupStatus.textContent = "Thanks! This demo does not save or send your details.";
-            console.log("Sign-up form submitted.", Object.keys(signupDetails));
-            signupForm.reset();
         });
 
         paintingCanvas.addEventListener("pointerdown", (event) => {
