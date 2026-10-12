@@ -215,6 +215,54 @@
             touch-action: none;
         }
 
+        .game-section {
+            margin: 40px auto 0;
+        }
+
+        .game-status {
+            min-height: 1.6em;
+            margin: 0 0 16px;
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(72px, 96px));
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .game-cell {
+            aspect-ratio: 1;
+            border: 1px solid rgb(255 255 255 / 70%);
+            border-radius: 10px;
+            color: #211c4b;
+            background: rgb(255 255 255 / 90%);
+            font: inherit;
+            font-size: 2.5rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .game-cell:disabled {
+            cursor: default;
+        }
+
+        .game-cell:focus-visible,
+        #reset-game:focus-visible {
+            outline: 3px solid #fde68a;
+            outline-offset: 3px;
+        }
+
+        #reset-game {
+            margin-top: 16px;
+            padding: 8px 12px;
+            border: 1px solid #c4b5fd;
+            border-radius: 6px;
+            color: #211c4b;
+            font: inherit;
+            cursor: pointer;
+        }
+
         @media (max-width: 800px) {
             .toolbar {
                 display: flex;
@@ -266,6 +314,22 @@
                     Your browser does not support the painting canvas.
                 </canvas>
             </section>
+            <section class="game-section" aria-labelledby="game-title">
+                <h2 id="game-title">Tic Tac Toe</h2>
+                <p id="game-status" class="game-status" aria-live="polite">X's turn</p>
+                <div class="game-board" role="group" aria-label="Tic Tac Toe board">
+                    <button class="game-cell" type="button" data-cell="0" aria-label="Row 1, column 1, empty"></button>
+                    <button class="game-cell" type="button" data-cell="1" aria-label="Row 1, column 2, empty"></button>
+                    <button class="game-cell" type="button" data-cell="2" aria-label="Row 1, column 3, empty"></button>
+                    <button class="game-cell" type="button" data-cell="3" aria-label="Row 2, column 1, empty"></button>
+                    <button class="game-cell" type="button" data-cell="4" aria-label="Row 2, column 2, empty"></button>
+                    <button class="game-cell" type="button" data-cell="5" aria-label="Row 2, column 3, empty"></button>
+                    <button class="game-cell" type="button" data-cell="6" aria-label="Row 3, column 1, empty"></button>
+                    <button class="game-cell" type="button" data-cell="7" aria-label="Row 3, column 2, empty"></button>
+                    <button class="game-cell" type="button" data-cell="8" aria-label="Row 3, column 3, empty"></button>
+                </div>
+                <button id="reset-game" type="button">New game</button>
+            </section>
         </section>
     </main>
     <script>
@@ -276,7 +340,46 @@
         const paintingContext = paintingCanvas.getContext("2d");
         const paintColor = document.querySelector("#paint-color");
         const clearPaintingButton = document.querySelector("#clear-painting");
+        const gameCells = [...document.querySelectorAll(".game-cell")];
+        const gameStatus = document.querySelector("#game-status");
+        const resetGameButton = document.querySelector("#reset-game");
+        const winningLines = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8],
+            [0, 3, 6], [1, 4, 7], [2, 5, 8],
+            [0, 4, 8], [2, 4, 6]
+        ];
+        let gameBoard = Array(9).fill("");
+        let currentPlayer = "X";
+        let gameOver = false;
         let isPainting = false;
+
+        const playTurn = (event) => {
+            const cell = event.currentTarget;
+            const index = Number(cell.dataset.cell);
+            if (gameOver || gameBoard[index]) {
+                return;
+            }
+
+            gameBoard[index] = currentPlayer;
+            cell.textContent = currentPlayer;
+            cell.setAttribute("aria-label", `Row ${Math.floor(index / 3) + 1}, column ${index % 3 + 1}, ${currentPlayer}`);
+            cell.disabled = true;
+
+            const hasWon = winningLines.some((line) => line.every((position) => gameBoard[position] === currentPlayer));
+            if (hasWon) {
+                gameStatus.textContent = `${currentPlayer} wins!`;
+                gameOver = true;
+                gameCells.forEach((gameCell) => {
+                    gameCell.disabled = true;
+                });
+            } else if (gameBoard.every(Boolean)) {
+                gameStatus.textContent = "It's a draw!";
+                gameOver = true;
+            } else {
+                currentPlayer = currentPlayer === "X" ? "O" : "X";
+                gameStatus.textContent = `${currentPlayer}'s turn`;
+            }
+        };
 
         const getCanvasPoint = (event) => {
             const bounds = paintingCanvas.getBoundingClientRect();
@@ -326,6 +429,18 @@
         paintingCanvas.addEventListener("pointercancel", stopPainting);
         clearPaintingButton.addEventListener("click", () => {
             paintingContext.clearRect(0, 0, paintingCanvas.width, paintingCanvas.height);
+        });
+        gameCells.forEach((cell) => cell.addEventListener("click", playTurn));
+        resetGameButton.addEventListener("click", () => {
+            gameBoard = Array(9).fill("");
+            currentPlayer = "X";
+            gameOver = false;
+            gameStatus.textContent = "X's turn";
+            gameCells.forEach((cell, index) => {
+                cell.textContent = "";
+                cell.disabled = false;
+                cell.setAttribute("aria-label", `Row ${Math.floor(index / 3) + 1}, column ${index % 3 + 1}, empty`);
+            });
         });
     </script>
 </body>
