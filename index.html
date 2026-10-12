@@ -263,6 +263,77 @@
             cursor: pointer;
         }
 
+        .notes-section {
+            width: min(100%, 640px);
+            margin: 40px auto 0;
+        }
+
+        .notes-form {
+            display: grid;
+            gap: 12px;
+            text-align: left;
+        }
+
+        .notes-form label {
+            font-weight: 600;
+        }
+
+        .notes-form input,
+        .notes-form textarea,
+        .notes-form button,
+        .note-actions button {
+            padding: 8px 10px;
+            border: 1px solid #c4b5fd;
+            border-radius: 6px;
+            color: #211c4b;
+            font: inherit;
+        }
+
+        .notes-form textarea {
+            min-height: 110px;
+            resize: vertical;
+        }
+
+        .notes-form button,
+        .note-actions button {
+            cursor: pointer;
+        }
+
+        .notes-form-actions,
+        .note-actions {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .notes-status {
+            min-height: 1.6em;
+            margin: 12px 0;
+        }
+
+        .notes-list {
+            display: grid;
+            gap: 12px;
+            text-align: left;
+        }
+
+        .note-card {
+            padding: 16px;
+            border: 1px solid rgb(255 255 255 / 35%);
+            border-radius: 10px;
+            background: rgb(22 18 55 / 35%);
+            overflow-wrap: anywhere;
+        }
+
+        .note-card h3 {
+            margin: 0 0 8px;
+        }
+
+        .note-card p {
+            margin: 0 0 12px;
+            white-space: pre-wrap;
+        }
+
         @media (max-width: 800px) {
             .toolbar {
                 display: flex;
@@ -330,6 +401,21 @@
                 </div>
                 <button id="reset-game" type="button">New game</button>
             </section>
+            <section class="notes-section" aria-labelledby="notes-title">
+                <h2 id="notes-title">Notes</h2>
+                <form id="notes-form" class="notes-form">
+                    <label for="note-title">Title</label>
+                    <input id="note-title" name="title" type="text" maxlength="120" required>
+                    <label for="note-content">Note</label>
+                    <textarea id="note-content" name="content" required></textarea>
+                    <div class="notes-form-actions">
+                        <button id="save-note" type="submit">Add note</button>
+                        <button id="cancel-note-edit" type="button" hidden>Cancel edit</button>
+                    </div>
+                </form>
+                <p id="notes-status" class="notes-status" aria-live="polite"></p>
+                <div id="notes-list" class="notes-list" aria-label="Saved notes"></div>
+            </section>
         </section>
     </main>
     <script>
@@ -343,6 +429,14 @@
         const gameCells = [...document.querySelectorAll(".game-cell")];
         const gameStatus = document.querySelector("#game-status");
         const resetGameButton = document.querySelector("#reset-game");
+        const notesForm = document.querySelector("#notes-form");
+        const noteTitleInput = document.querySelector("#note-title");
+        const noteContentInput = document.querySelector("#note-content");
+        const saveNoteButton = document.querySelector("#save-note");
+        const cancelNoteEditButton = document.querySelector("#cancel-note-edit");
+        const notesStatus = document.querySelector("#notes-status");
+        const notesList = document.querySelector("#notes-list");
+        const notesStorageKey = "my-world-notes";
         const winningLines = [
             [0, 1, 2], [3, 4, 5], [6, 7, 8],
             [0, 3, 6], [1, 4, 7], [2, 5, 8],
@@ -351,7 +445,110 @@
         let gameBoard = Array(9).fill("");
         let currentPlayer = "X";
         let gameOver = false;
+        let notes = [];
+        let editingNoteId = null;
         let isPainting = false;
+
+        const resetNoteForm = () => {
+            notesForm.reset();
+            editingNoteId = null;
+            saveNoteButton.textContent = "Add note";
+            cancelNoteEditButton.hidden = true;
+        };
+
+        const saveNotes = () => {
+            try {
+                localStorage.setItem(notesStorageKey, JSON.stringify(notes));
+                return true;
+            } catch {
+                notesStatus.textContent = "Couldn't save notes in this browser. Check that storage is available and try again.";
+                return false;
+            }
+        };
+
+        const renderNotes = () => {
+            notesList.replaceChildren();
+            if (notes.length === 0) {
+                const emptyMessage = document.createElement("p");
+                emptyMessage.textContent = "No notes yet. Add one above.";
+                notesList.append(emptyMessage);
+                return;
+            }
+
+            notes.forEach((note) => {
+                const card = document.createElement("article");
+                card.className = "note-card";
+                const title = document.createElement("h3");
+                title.textContent = note.title;
+                const content = document.createElement("p");
+                content.textContent = note.content;
+                const actions = document.createElement("div");
+                actions.className = "note-actions";
+
+                const editButton = document.createElement("button");
+                editButton.type = "button";
+                editButton.textContent = "Edit";
+                editButton.addEventListener("click", () => {
+                    editingNoteId = note.id;
+                    noteTitleInput.value = note.title;
+                    noteContentInput.value = note.content;
+                    saveNoteButton.textContent = "Save changes";
+                    cancelNoteEditButton.hidden = false;
+                    notesStatus.textContent = "Editing note.";
+                    noteTitleInput.focus();
+                });
+
+                const deleteButton = document.createElement("button");
+                deleteButton.type = "button";
+                deleteButton.textContent = "Delete";
+                deleteButton.addEventListener("click", () => {
+                    notes = notes.filter((savedNote) => savedNote.id !== note.id);
+                    renderNotes();
+                    if (saveNotes()) {
+                        notesStatus.textContent = "Note deleted.";
+                    }
+                });
+
+                actions.append(editButton, deleteButton);
+                card.append(title, content, actions);
+                notesList.append(card);
+            });
+        };
+
+        const loadNotes = () => {
+            let savedNotes;
+            try {
+                savedNotes = localStorage.getItem(notesStorageKey);
+            } catch {
+                notesStatus.textContent = "Couldn't access saved notes in this browser.";
+                return;
+            }
+
+            if (!savedNotes) {
+                renderNotes();
+                return;
+            }
+
+            let parsedNotes;
+            try {
+                parsedNotes = JSON.parse(savedNotes);
+            } catch {
+                notesStatus.textContent = "Saved notes couldn't be read because their data is invalid.";
+                renderNotes();
+                return;
+            }
+
+            if (!Array.isArray(parsedNotes) || parsedNotes.some((note) =>
+                !note || typeof note.id !== "string" || typeof note.title !== "string" || typeof note.content !== "string"
+            )) {
+                notesStatus.textContent = "Saved notes couldn't be read because their data is invalid.";
+                renderNotes();
+                return;
+            }
+
+            notes = parsedNotes;
+            renderNotes();
+        };
 
         const playTurn = (event) => {
             const cell = event.currentTarget;
@@ -442,6 +639,37 @@
                 cell.setAttribute("aria-label", `Row ${Math.floor(index / 3) + 1}, column ${index % 3 + 1}, empty`);
             });
         });
+        notesForm.addEventListener("submit", (event) => {
+            event.preventDefault();
+            const title = noteTitleInput.value.trim();
+            const content = noteContentInput.value.trim();
+            if (!title || !content) {
+                notesStatus.textContent = "Enter a title and note before saving.";
+                return;
+            }
+
+            if (editingNoteId) {
+                notes = notes.map((note) => note.id === editingNoteId ? { ...note, title, content } : note);
+                resetNoteForm();
+                renderNotes();
+                if (saveNotes()) {
+                    notesStatus.textContent = "Note updated.";
+                }
+                return;
+            }
+
+            notes.unshift({ id: `${Date.now()}-${Math.random()}`, title, content });
+            resetNoteForm();
+            renderNotes();
+            if (saveNotes()) {
+                notesStatus.textContent = "Note added.";
+            }
+        });
+        cancelNoteEditButton.addEventListener("click", () => {
+            resetNoteForm();
+            notesStatus.textContent = "Edit canceled.";
+        });
+        loadNotes();
     </script>
 </body>
 </html>
