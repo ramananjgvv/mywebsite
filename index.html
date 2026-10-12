@@ -345,7 +345,11 @@
 
         signupForm.addEventListener("submit", (event) => {
             event.preventDefault();
+
+            const formData = new FormData(signupForm);
+            const signupDetails = Object.fromEntries(formData.entries());
             signupStatus.textContent = "Thanks! This demo does not save or send your details.";
+            console.log("Sign-up form submitted.", Object.keys(signupDetails));
             signupForm.reset();
         });
 
