@@ -20,7 +20,7 @@
 
         .toolbar {
             display: grid;
-            grid-template-columns: minmax(0, 1fr) minmax(0, 520px) minmax(0, 1fr);
+            grid-template-columns: minmax(0, 1fr) auto;
             align-items: center;
             gap: 24px;
             padding: 16px 32px;
@@ -40,18 +40,18 @@
             font-weight: 700;
         }
 
-        .toolbar-search {
+        .page-search {
             display: flex;
             gap: 8px;
-            width: 100%;
-            margin: 0;
+            width: min(100%, 520px);
+            margin: 24px auto;
         }
 
         .toolbar-settings {
             justify-self: end;
         }
 
-        .toolbar-search input {
+        .page-search input {
             flex: 1;
             min-width: 0;
             padding: 8px;
@@ -61,7 +61,7 @@
             font: inherit;
         }
 
-        .toolbar-search button {
+        .page-search button {
             padding: 8px 12px;
             border: 1px solid #c4b5fd;
             border-radius: 6px;
@@ -222,12 +222,6 @@
                 padding: 14px 18px;
             }
 
-            .toolbar-search {
-                order: 3;
-                flex-basis: 100%;
-                max-width: none;
-            }
-
             .toolbar-links {
                 gap: 16px;
             }
@@ -237,10 +231,6 @@
 <body>
     <header class="toolbar">
         <a class="toolbar-brand" href="#home">My world</a>
-        <form class="toolbar-search" action="https://www.google.com/search" method="get" role="search">
-            <input type="search" name="q" aria-label="Search Google" placeholder="Search the web" required>
-            <button type="submit">Search</button>
-        </form>
         <details class="toolbar-settings">
             <summary>Settings</summary>
             <div class="settings-menu">
@@ -259,6 +249,10 @@
     <main id="home">
         <section aria-labelledby="page-title">
             <h1 id="page-title">Hello, World! 🚀</h1>
+            <form class="page-search" action="https://www.google.com/search" method="get" role="search">
+                <input type="search" name="q" aria-label="Search Google" placeholder="Search the web" required>
+                <button type="submit">Search</button>
+            </form>
             <p id="about">Welcome to my very first website built by me, my name is raj!</p>
             <p>today is a holiday</p>
             <section class="painting-section" aria-labelledby="painting-title">
