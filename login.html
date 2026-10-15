@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Create account | My world</title>
+    <style>
+        body {
+            min-height: 100vh;
+            margin: 0;
+            display: grid;
+            place-items: center;
+            color: #fff;
+            font-family: system-ui, sans-serif;
+            background:
+                radial-gradient(ellipse at 20% 20%, #f9a8d4 0, transparent 40%),
+                radial-gradient(ellipse at 80% 80%, #67e8f9 0, transparent 45%),
+                linear-gradient(135deg, #312e81, #7c3aed 55%, #2563eb);
+        }
+
+        main {
+            width: min(100% - 48px, 400px);
+            padding: 28px;
+            border: 1px solid rgb(255 255 255 / 25%);
+            border-radius: 16px;
+            background: rgb(22 18 55 / 45%);
+            box-shadow: 0 12px 30px rgb(0 0 0 / 25%);
+        }
+
+        h1 {
+            margin-top: 0;
+        }
+
+        .notice {
+            line-height: 1.5;
+        }
+
+        form {
+            display: grid;
+            gap: 12px;
+        }
+
+        .mode-switch {
+            display: flex;
+            gap: 8px;
+            margin: 20px 0;
+        }
+
+        label {
+            font-weight: 600;
+        }
+
+        input,
+        button {
+            min-width: 0;
+            padding: 10px;
+            border: 1px solid #c4b5fd;
+            border-radius: 6px;
+            color: #211c4b;
+            font: inherit;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        form button,
+        #sign-out {
+            margin-top: 8px;
+        }
+
+        .mode-switch button {
+            flex: 1;
+        }
+
+        .mode-switch button[aria-pressed="true"] {
+            border-color: #fff;
+            outline: 2px solid #c4b5fd;
+        }
+
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            color: inherit;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <h1 id="page-title">Create account</h1>
+        <p id="page-description" class="notice">Create an account with your email address. Your password is securely hashed before it is saved.</p>
+        <div class="mode-switch" aria-label="Account action">
+            <button id="signup-mode" type="button" aria-pressed="true">Sign up</button>
+            <button id="login-mode" type="button" aria-pressed="false">Log in</button>
+        </div>
+        <form id="auth-form">
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" autocomplete="email" maxlength="254" required>
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" autocomplete="new-password" minlength="12" maxlength="128" required>
+            <label id="confirm-password-label" for="confirm-password">Confirm password</label>
+            <input id="confirm-password" name="confirm-password" type="password" autocomplete="new-password" required>
+            <button id="submit-auth" type="submit">Create account</button>
+        </form>
+        <section id="signed-in" hidden>
+            <p id="signed-in-message" class="notice"></p>
+            <button id="sign-out" type="button">Sign out</button>
+        </section>
+        <p id="auth-status" class="notice" aria-live="polite"></p>
+        <a href="index.html">Back to home</a>
+    </main>
+    <script>
+        const authApiBaseUrl = "https://api.myworld.com/api/auth";
+        const authForm = document.querySelector("#auth-form");
+        const passwordInput = document.querySelector("#password");
+        const confirmPasswordInput = document.querySelector("#confirm-password");
+        const confirmPasswordLabel = document.querySelector("#confirm-password-label");
+        const signupModeButton = document.querySelector("#signup-mode");
+        const loginModeButton = document.querySelector("#login-mode");
+        const pageTitle = document.querySelector("#page-title");
+        const pageDescription = document.querySelector("#page-description");
+        const submitAuthButton = document.querySelector("#submit-auth");
+        const signedInSection = document.querySelector("#signed-in");
+        const signedInMessage = document.querySelector("#signed-in-message");
+        const authStatus = document.querySelector("#auth-status");
+        let authMode = "signup";
+
+        const setAuthMode = (mode) => {
+            authMode = mode;
+            const isSignup = mode === "signup";
+            pageTitle.textContent = isSignup ? "Create account" : "Log in";
+            pageDescription.textContent = isSignup
+                ? "Create an account with your email address. Your password is securely hashed before it is saved."
+                : "Log in to your account with your email address and password.";
+            passwordInput.autocomplete = isSignup ? "new-password" : "current-password";
+            passwordInput.minLength = isSignup ? 12 : 1;
+            confirmPasswordLabel.hidden = !isSignup;
+            confirmPasswordInput.hidden = !isSignup;
+            confirmPasswordInput.disabled = !isSignup;
+            confirmPasswordInput.required = isSignup;
+            signupModeButton.setAttribute("aria-pressed", String(isSignup));
+            loginModeButton.setAttribute("aria-pressed", String(!isSignup));
+            submitAuthButton.textContent = isSignup ? "Create account" : "Log in";
+            authStatus.textContent = "";
+        };
+
+        const sendAuthRequest = async (endpoint, method = "GET", body) => {
+            let response;
+            try {
+                response = await fetch(`${authApiBaseUrl}/${endpoint}`, {
+                    method,
+                    credentials: "include",
+                    headers: body ? { "Content-Type": "application/json" } : undefined,
+                    body: body ? JSON.stringify(body) : undefined
+                });
+            } catch {
+                throw new Error("Could not connect securely to the account service. Check that the Vercel API is deployed at the configured URL and its HTTPS certificate is valid.");
+            }
+            let result;
+            try {
+                result = await response.json();
+            } catch {
+                throw new Error("The account service returned an unreadable response.");
+            }
+            if (!response.ok) {
+                throw new Error(result.error || "The account request failed.");
+            }
+            return result;
+        };
+
+        const showSignedIn = (email) => {
+            authForm.hidden = true;
+            document.querySelector(".mode-switch").hidden = true;
+            signedInSection.hidden = false;
+            signedInMessage.textContent = `Signed in as ${email}.`;
+        };
+
+        signupModeButton.addEventListener("click", () => setAuthMode("signup"));
+        loginModeButton.addEventListener("click", () => setAuthMode("login"));
+
+        authForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const email = authForm.elements.email.value.trim();
+            if (authMode === "signup" && passwordInput.value !== confirmPasswordInput.value) {
+                authStatus.textContent = "Passwords do not match.";
+                confirmPasswordInput.focus();
+                return;
+            }
+
+            const submittedMode = authMode;
+            submitAuthButton.disabled = true;
+            signupModeButton.disabled = true;
+            loginModeButton.disabled = true;
+            authStatus.textContent = submittedMode === "signup" ? "Creating your account..." : "Signing in...";
+            try {
+                const result = await sendAuthRequest(submittedMode, "POST", {
+                    email,
+                    password: passwordInput.value
+                });
+                authForm.reset();
+                showSignedIn(result.user.email);
+                authStatus.textContent = submittedMode === "signup" ? "Your account was created." : "You are signed in.";
+            } catch (error) {
+                authStatus.textContent = error.message;
+            } finally {
+                submitAuthButton.disabled = false;
+                signupModeButton.disabled = false;
+                loginModeButton.disabled = false;
+            }
+        });
+
+        document.querySelector("#sign-out").addEventListener("click", async () => {
+            authStatus.textContent = "Signing out...";
+            try {
+                await sendAuthRequest("logout", "POST", {});
+                authForm.hidden = false;
+                document.querySelector(".mode-switch").hidden = false;
+                signedInSection.hidden = true;
+                authStatus.textContent = "You are signed out.";
+            } catch (error) {
+                authStatus.textContent = error.message;
+            }
+        });
+
+        if (window.location.protocol === "file:") {
+            authStatus.textContent = "You opened this page as a local file. Sign-in works from the published HTTPS website after its Vercel API is deployed.";
+        } else {
+            sendAuthRequest("me")
+                .then((result) => showSignedIn(result.user.email))
+                .catch((error) => {
+                    if (!error.message.includes("not signed in")) {
+                        authStatus.textContent = error.message;
+                    }
+                });
+        }
+    </script>
+</body>
+</html>
