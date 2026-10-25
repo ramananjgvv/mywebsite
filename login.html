@@ -111,6 +111,9 @@
     </main>
     <script>
         const authApiBaseUrl = "https://api.myworld.com/api/auth";
+        const isLocalPage = window.location.protocol === "file:"
+            || window.location.hostname === "localhost"
+            || window.location.hostname === "127.0.0.1";
         const authForm = document.querySelector("#auth-form");
         const passwordInput = document.querySelector("#password");
         const confirmPasswordInput = document.querySelector("#confirm-password");
@@ -154,7 +157,7 @@
                     body: body ? JSON.stringify(body) : undefined
                 });
             } catch {
-                throw new Error("Could not connect securely to the account service. Check that the Vercel API is deployed at the configured URL and its HTTPS certificate is valid.");
+                throw new Error(`Could not reach the API at ${authApiBaseUrl}. Neon stores your account data but does not host the API. Deploy the /api/auth functions to Vercel, set DATABASE_URL there to your Neon connection string, and update this page with the deployed API URL.`);
             }
             let result;
             try {
@@ -180,6 +183,11 @@
 
         authForm.addEventListener("submit", async (event) => {
             event.preventDefault();
+            if (isLocalPage) {
+                authStatus.textContent = "This page is running locally, and no local account API is configured. Neon is only the database; deploy the /api/auth functions to Vercel and open the published HTTPS website to sign in.";
+                return;
+            }
+
             const email = authForm.elements.email.value.trim();
             if (authMode === "signup" && passwordInput.value !== confirmPasswordInput.value) {
                 authStatus.textContent = "Passwords do not match.";
@@ -222,8 +230,8 @@
             }
         });
 
-        if (window.location.protocol === "file:") {
-            authStatus.textContent = "You opened this page as a local file. Sign-in works from the published HTTPS website after its Vercel API is deployed.";
+        if (isLocalPage) {
+            authStatus.textContent = "Sign-in needs an account API; Neon provides the database only. Deploy the /api/auth functions to Vercel and open the published HTTPS website.";
         } else {
             sendAuthRequest("me")
                 .then((result) => showSignedIn(result.user.email))

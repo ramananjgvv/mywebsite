@@ -216,6 +216,123 @@
             touch-action: none;
         }
 
+        .photobooth-section {
+            width: min(100%, 760px);
+            margin: 40px auto 0;
+        }
+
+        .photobooth-tools {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .photobooth-tools label {
+            font-weight: 600;
+        }
+
+        .photobooth-tools select,
+        .photobooth-tools button,
+        .photo-actions a,
+        .photo-actions button {
+            min-height: 40px;
+            padding: 6px 10px;
+            border: 1px solid #c4b5fd;
+            border-radius: 6px;
+            color: #211c4b;
+            background: #fff;
+            font: inherit;
+        }
+
+        .photobooth-tools button,
+        .photo-actions a,
+        .photo-actions button {
+            cursor: pointer;
+        }
+
+        .photobooth-tools button:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .camera-stage {
+            position: relative;
+            display: grid;
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            overflow: hidden;
+            place-items: center;
+            border: 1px solid rgb(255 255 255 / 70%);
+            border-radius: 12px;
+            background: #17152d;
+        }
+
+        .camera-stage video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .camera-placeholder {
+            position: absolute;
+            max-width: 80%;
+            color: rgb(255 255 255 / 80%);
+        }
+
+        .photobooth-status {
+            min-height: 1.6em;
+            margin: 12px 0;
+        }
+
+        .photo-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            text-align: left;
+        }
+
+        .photo-card {
+            min-width: 0;
+            padding: 10px;
+            border: 1px solid rgb(255 255 255 / 35%);
+            border-radius: 10px;
+            background: rgb(22 18 55 / 35%);
+        }
+
+        .photo-card img {
+            display: block;
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+
+        .photo-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .photo-actions a {
+            display: inline-flex;
+            flex: 1;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+        }
+
+        .photo-actions button {
+            flex: 1;
+        }
+
+        .photo-gallery-empty {
+            grid-column: 1 / -1;
+            margin: 0;
+        }
+
         .game-section {
             margin: 40px auto 0;
         }
@@ -376,6 +493,32 @@
             </form>
             <p id="about">Welcome to my very first website built by me, my name is raj!</p>
             <p>today is a holiday</p>
+            <section class="photobooth-section" aria-labelledby="photobooth-title">
+                <h2 id="photobooth-title">Photobooth</h2>
+                <p>Take pictures with your camera, try a filter, and download your favorites. Photos stay on this device.</p>
+                <div class="photobooth-tools">
+                    <button id="camera-toggle" type="button">Start camera</button>
+                    <button id="switch-camera" type="button" disabled>Switch camera</button>
+                    <label for="photo-filter">Filter</label>
+                    <select id="photo-filter">
+                        <option value="none">Original</option>
+                        <option value="mono">Black &amp; white</option>
+                        <option value="warm">Warm</option>
+                        <option value="cool">Cool</option>
+                        <option value="vintage">Vintage</option>
+                    </select>
+                    <button id="take-photo" type="button" disabled>Take photo</button>
+                    <button id="clear-photos" type="button" disabled>Clear photos</button>
+                </div>
+                <div class="camera-stage">
+                    <video id="camera-preview" autoplay playsinline muted hidden aria-label="Live camera preview"></video>
+                    <p id="camera-placeholder" class="camera-placeholder">Start the camera to take a photo.</p>
+                </div>
+                <p id="photobooth-status" class="photobooth-status" aria-live="polite"></p>
+                <div id="photo-gallery" class="photo-gallery" aria-label="Captured photos">
+                    <p class="photo-gallery-empty">Your photos will appear here.</p>
+                </div>
+            </section>
             <section class="painting-section" aria-labelledby="painting-title">
                 <h2 id="painting-title">Painting</h2>
                 <div class="painting-tools">
@@ -424,6 +567,15 @@
         const pageTitleInput = document.querySelector("#page-title-setting");
         const pageHeading = document.querySelector("#page-title");
         const wallpaperSelector = document.querySelector("#wallpaper");
+        const cameraPreview = document.querySelector("#camera-preview");
+        const cameraPlaceholder = document.querySelector("#camera-placeholder");
+        const cameraToggleButton = document.querySelector("#camera-toggle");
+        const switchCameraButton = document.querySelector("#switch-camera");
+        const takePhotoButton = document.querySelector("#take-photo");
+        const clearPhotosButton = document.querySelector("#clear-photos");
+        const photoFilter = document.querySelector("#photo-filter");
+        const photoboothStatus = document.querySelector("#photobooth-status");
+        const photoGallery = document.querySelector("#photo-gallery");
         const paintingCanvas = document.querySelector("#painting-canvas");
         const paintingContext = paintingCanvas.getContext("2d");
         const paintColor = document.querySelector("#paint-color");
@@ -439,6 +591,14 @@
         const notesStatus = document.querySelector("#notes-status");
         const notesList = document.querySelector("#notes-list");
         const notesStorageKey = "my-world-notes";
+        const maxPhotos = 12;
+        const photoFilters = {
+            none: "none",
+            mono: "grayscale(1)",
+            warm: "sepia(0.35) saturate(1.35)",
+            cool: "hue-rotate(165deg) saturate(0.8)",
+            vintage: "sepia(0.55) contrast(0.9) saturate(0.8)"
+        };
         const winningLines = [
             [0, 1, 2], [3, 4, 5], [6, 7, 8],
             [0, 3, 6], [1, 4, 7], [2, 5, 8],
@@ -450,6 +610,9 @@
         let notes = [];
         let editingNoteId = null;
         let isPainting = false;
+        let cameraStream = null;
+        let cameraFacingMode = "user";
+        let photos = [];
 
         const resetNoteForm = () => {
             notesForm.reset();
@@ -588,6 +751,139 @@
             };
         };
 
+        const renderPhotos = () => {
+            photoGallery.replaceChildren();
+            clearPhotosButton.disabled = photos.length === 0;
+            if (photos.length === 0) {
+                const emptyMessage = document.createElement("p");
+                emptyMessage.className = "photo-gallery-empty";
+                emptyMessage.textContent = "Your photos will appear here.";
+                photoGallery.append(emptyMessage);
+                return;
+            }
+
+            photos.forEach((photo, index) => {
+                const card = document.createElement("article");
+                card.className = "photo-card";
+                const image = document.createElement("img");
+                image.src = photo.url;
+                image.alt = `Photobooth picture ${index + 1}`;
+                const actions = document.createElement("div");
+                actions.className = "photo-actions";
+                const downloadLink = document.createElement("a");
+                downloadLink.href = photo.url;
+                downloadLink.download = `my-world-photo-${index + 1}.png`;
+                downloadLink.textContent = "Download";
+                const deleteButton = document.createElement("button");
+                deleteButton.type = "button";
+                deleteButton.textContent = "Delete";
+                deleteButton.setAttribute("aria-label", `Delete photo ${index + 1}`);
+                deleteButton.addEventListener("click", () => {
+                    URL.revokeObjectURL(photo.url);
+                    photos = photos.filter((savedPhoto) => savedPhoto !== photo);
+                    renderPhotos();
+                    photoboothStatus.textContent = "Photo deleted.";
+                });
+                actions.append(downloadLink, deleteButton);
+                card.append(image, actions);
+                photoGallery.append(card);
+            });
+        };
+
+        const stopCamera = () => {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach((track) => track.stop());
+                cameraStream = null;
+            }
+            cameraPreview.srcObject = null;
+            cameraPreview.hidden = true;
+            cameraPlaceholder.hidden = false;
+            cameraToggleButton.textContent = "Start camera";
+            switchCameraButton.disabled = true;
+            takePhotoButton.disabled = true;
+        };
+
+        const startCamera = async () => {
+            if (!navigator.mediaDevices?.getUserMedia) {
+                photoboothStatus.textContent = "Camera access is unavailable in this browser. Open the site over HTTPS or use a supported browser.";
+                return;
+            }
+
+            cameraToggleButton.disabled = true;
+            photoboothStatus.textContent = "Requesting camera access...";
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: false,
+                    video: {
+                        facingMode: { ideal: cameraFacingMode },
+                        width: { ideal: 1280 },
+                        height: { ideal: 960 }
+                    }
+                });
+                cameraStream = stream;
+                cameraPreview.srcObject = stream;
+                cameraPreview.style.filter = photoFilters[photoFilter.value];
+                cameraPreview.hidden = false;
+                cameraPlaceholder.hidden = true;
+                await cameraPreview.play();
+                cameraToggleButton.textContent = "Stop camera";
+                switchCameraButton.disabled = false;
+                takePhotoButton.disabled = false;
+                photoboothStatus.textContent = "Camera is ready. Smile!";
+                stream.getVideoTracks()[0].addEventListener("ended", () => {
+                    if (cameraStream !== stream) {
+                        return;
+                    }
+                    stopCamera();
+                    photoboothStatus.textContent = "The camera was disconnected.";
+                }, { once: true });
+            } catch (error) {
+                stopCamera();
+                if (error.name === "NotAllowedError" || error.name === "PermissionDeniedError") {
+                    photoboothStatus.textContent = "Camera permission was denied. Allow camera access in your browser settings, then try again.";
+                } else if (error.name === "NotFoundError" || error.name === "DevicesNotFoundError") {
+                    photoboothStatus.textContent = "No camera was found on this device.";
+                } else {
+                    photoboothStatus.textContent = "Couldn't start the camera. Make sure the page is served over HTTPS (or localhost) and try again.";
+                }
+            } finally {
+                cameraToggleButton.disabled = false;
+            }
+        };
+
+        const takePhoto = () => {
+            if (!cameraStream || cameraPreview.videoWidth === 0) {
+                photoboothStatus.textContent = "Wait for the camera preview before taking a photo.";
+                return;
+            }
+
+            const photoCanvas = document.createElement("canvas");
+            photoCanvas.width = cameraPreview.videoWidth;
+            photoCanvas.height = cameraPreview.videoHeight;
+            const context = photoCanvas.getContext("2d");
+            if (!context) {
+                photoboothStatus.textContent = "Your browser couldn't prepare the photo. Please try again.";
+                return;
+            }
+            context.filter = photoFilters[photoFilter.value];
+            context.drawImage(cameraPreview, 0, 0, photoCanvas.width, photoCanvas.height);
+            photoCanvas.toBlob((blob) => {
+                if (!blob) {
+                    photoboothStatus.textContent = "Your browser couldn't save the photo. Please try again.";
+                    return;
+                }
+
+                photos.push({ url: URL.createObjectURL(blob) });
+                if (photos.length > maxPhotos) {
+                    URL.revokeObjectURL(photos.shift().url);
+                }
+                renderPhotos();
+                photoboothStatus.textContent = photos.length === maxPhotos
+                    ? `Photo captured. The gallery keeps up to ${maxPhotos} photos; the oldest will be replaced next.`
+                    : "Photo captured. Download it to keep a copy.";
+            }, "image/png");
+        };
+
         pageTitleInput.addEventListener("input", () => {
             document.title = pageTitleInput.value;
             pageHeading.textContent = pageTitleInput.value;
@@ -596,6 +892,32 @@
         wallpaperSelector.addEventListener("change", (event) => {
             document.body.dataset.wallpaper = event.target.value;
         });
+
+        cameraToggleButton.addEventListener("click", () => {
+            if (cameraStream) {
+                stopCamera();
+                photoboothStatus.textContent = "Camera stopped.";
+            } else {
+                startCamera();
+            }
+        });
+        switchCameraButton.addEventListener("click", async () => {
+            cameraFacingMode = cameraFacingMode === "user" ? "environment" : "user";
+            stopCamera();
+            await startCamera();
+        });
+        photoFilter.addEventListener("change", () => {
+            cameraPreview.style.filter = photoFilters[photoFilter.value];
+            photoboothStatus.textContent = "Filter updated.";
+        });
+        takePhotoButton.addEventListener("click", takePhoto);
+        clearPhotosButton.addEventListener("click", () => {
+            photos.forEach((photo) => URL.revokeObjectURL(photo.url));
+            photos = [];
+            renderPhotos();
+            photoboothStatus.textContent = "All photos cleared.";
+        });
+        window.addEventListener("pagehide", stopCamera);
 
         paintingCanvas.addEventListener("pointerdown", (event) => {
             event.preventDefault();

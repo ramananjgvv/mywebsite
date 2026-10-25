@@ -27,6 +27,11 @@ test("signup validation rejects invalid email addresses and short passwords", ()
         email: "person@example.com",
         password: "too-short"
     }).error, "Use a password between 12 and 128 characters long.");
+
+    assert.equal(validateSignup({
+        email: "person@example.com",
+        password: "            "
+    }).error, "Use a password between 12 and 128 characters long.");
 });
 
 test("login accepts valid emails and checks stored password hashes", async () => {
@@ -37,6 +42,11 @@ test("login accepts valid emails and checks stored password hashes", async () =>
         email: "person@example.com",
         password
     });
+    assert.deepEqual(validateLogin({ email: "person@example.com", password: "   " }), {
+        error: "Enter your password."
+    });
     assert.equal(await passwordMatches(password, hash), true);
     assert.equal(await passwordMatches("a-different-password", hash), false);
+    assert.equal(await passwordMatches(password, undefined), false);
+    assert.equal(await passwordMatches(password, "not-a-valid-hash"), false);
 });
